@@ -15,13 +15,13 @@ public class TokenValidatorTest {
     private TokenValidator instance;
 
     @BeforeEach
-    public void BeforeEach() {
+    public void beforeEach() {
         Date date = new Date(1681207053000L);
         instance = new TokenValidator(date);
     }
 
     @Test
-    public void test() throws JwkException {
+    public void shouldReturnValidTokenWhenValidationSucceeds() throws JwkException {
         String accessToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzpBNTYwOTVEQS0xODJDLTQ1MjMtOUQyNS1DNzlEMz" +
                 "NBNEY5OUIiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsiaWRkOjhhMzJlNGY4LTk4MGUtNDVhMS1iMjcyLWM5YzA0OTk3ND" +
                 "IwOSIsImVudk5hbWU6cHJvZHVjdGlvbiIsImVudklkOjQ0MGQ3NTgxLWYxNDYtNDE3NS04NzYwLTVjMjUwZDIwMDZmO" +
@@ -38,10 +38,14 @@ public class TokenValidatorTest {
 
         String playerId = "FqpTXLuVEabcZbJqaWk46KOnfhMA";
 
-        UnityAuthentication unityAuthentication = instance.validate(playerId, accessToken);
+        UnityWebToken result = instance.validate(playerId, accessToken);
 
-        assertEquals("FqpTXLuVEabcZbJqaWk46KOnfhMA", unityAuthentication.getPlayerId(), "unexpected player id");
-        assertEquals("b6d38a44-35a4-4d20-909b-50696afcff39", unityAuthentication.getProjectId(), "unexpected project id");
-        assertEquals("https://player-auth.services.api.unity.com", unityAuthentication.getIssuerUrl(), "unexpected issuer url");
+        assertEquals("FqpTXLuVEabcZbJqaWk46KOnfhMA",                result.getPlayerId(), "unexpected player id");
+        assertEquals("b6d38a44-35a4-4d20-909b-50696afcff39",        result.getProjectId(), "unexpected project id");
+        assertEquals("https://player-auth.services.api.unity.com",  result.getIssuerUrl(), "unexpected issuer url");
+        assertEquals("440d7581-f146-4175-8760-5c250d2006f9",        result.getAudience().getEnvironmentId(), "unexpected env id");
+        assertEquals("production",                                  result.getAudience().getEnvironmentName(), "unexpected env name");
+        assertEquals("anonymous",                                   result.getSignInProvider(), "unexpected sign-in provider");
+        assertEquals("authentication",                              result.getTokenType(), "unexpected token type");
     }
 }

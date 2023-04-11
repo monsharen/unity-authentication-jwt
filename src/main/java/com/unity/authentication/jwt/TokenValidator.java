@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 public class TokenValidator {
@@ -20,7 +21,7 @@ public class TokenValidator {
 
     private final Date now;
 
-    public UnityAuthentication validate(String playerId, String accessToken) throws JwkException {
+    public UnityWebToken validate(String playerId, String accessToken) throws JwkException {
         DecodedJWT jwt = JWT.decode(accessToken);
 
         JwkProvider provider = new UrlJwkProvider("https://api.prd.identity.corp.unity3d.com");
@@ -50,13 +51,43 @@ public class TokenValidator {
 
         String tokenId = getClaim(jwt, "jti");
 
-        return UnityAuthentication.builder()
+        String tokenType = getClaim(jwt, "token_type");
+
+        String signInProvider = getClaim(jwt, "sign_in_provider");
+
+        Audience audience = parseAudience(jwt);
+
+        return UnityWebToken.builder()
                 .playerId(jwt.getSubject())
                 .issuerUrl(jwt.getIssuer())
                 .projectId(projectId)
                 .tokenId(tokenId)
+                .audience(audience)
+                .tokenType(tokenType)
+                .signInProvider(signInProvider)
                 .build();
+    }
 
+    private Audience parseAudience(DecodedJWT jwt) {
+        List<String> audience = jwt.getAudience();
+
+        Audience.AudienceBuilder audienceBuilder = Audience.builder();
+        for (String aud : audience) {
+            if (aud.contains(":")) {
+                String[] parts = aud.split(":");
+                if (parts.length == 2) {
+                    String key = parts[0];
+                    String value = parts[1];
+                    if ("envName".equals(key)) {
+                        audienceBuilder.environmentName(value);
+                    } else if ("envId".equals(key)) {
+                        audienceBuilder.environmentId(value);
+                    }
+                }
+            }
+        }
+
+        return audienceBuilder.build();
     }
 
     private String getClaim(DecodedJWT jwt, String key) {
