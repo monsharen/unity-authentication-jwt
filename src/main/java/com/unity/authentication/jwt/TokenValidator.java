@@ -6,6 +6,7 @@ import com.auth0.jwk.JwkProvider;
 import com.auth0.jwk.UrlJwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.AllArgsConstructor;
 
@@ -45,13 +46,26 @@ public class TokenValidator {
             throw new RuntimeException(String.format("Unexpected issuer url '%s'", issuerUrl));
         }
 
+        String projectId = getClaim(jwt, "project_id");
+
+        String tokenId = getClaim(jwt, "jti");
+
         return UnityAuthentication.builder()
                 .playerId(jwt.getSubject())
                 .issuerUrl(jwt.getIssuer())
-                .projectId(jwt.getClaim("project_id").asString())
-                .tokenId(jwt.getClaim("jti").asString())
+                .projectId(projectId)
+                .tokenId(tokenId)
                 .build();
 
+    }
+
+    private String getClaim(DecodedJWT jwt, String key) {
+        Claim claim = jwt.getClaim(key);
+        if (claim == null) {
+            throw new IllegalStateException(String.format("jwt did not contain claim with key '%s'", key));
+        }
+
+        return claim.asString();
     }
 
 }
