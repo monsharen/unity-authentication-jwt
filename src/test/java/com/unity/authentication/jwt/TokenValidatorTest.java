@@ -1,7 +1,6 @@
 package com.unity.authentication.jwt;
 
 import com.auth0.jwk.JwkException;
-import lombok.extern.java.Log;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +8,6 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Log
 public class TokenValidatorTest {
 
     private TokenValidator instance;
