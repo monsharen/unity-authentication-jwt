@@ -8,23 +8,23 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.List;
 
-@AllArgsConstructor
+@Builder
 public class TokenValidator {
 
-    private static final String EXPECTED_ISSUER_URL = "https://player-auth.services.api.unity.com";
-
-    private final Date now;
+    private final String jwkProviderUrl;
+    private final String expectedIssuerUrl;
+    private Date now = new Date();
 
     public UnityWebToken validate(String playerId, String accessToken) throws JwkException {
         DecodedJWT jwt = JWT.decode(accessToken);
 
-        JwkProvider provider = new UrlJwkProvider("https://api.prd.identity.corp.unity3d.com");
+        JwkProvider provider = new UrlJwkProvider(jwkProviderUrl);
         Jwk jwk = provider.get(jwt.getKeyId());
 
         Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
@@ -43,8 +43,8 @@ public class TokenValidator {
         }
 
         String issuerUrl = jwt.getIssuer();
-        if (!EXPECTED_ISSUER_URL.equals(issuerUrl)) {
-            throw new RuntimeException(String.format("Unexpected issuer url '%s'", issuerUrl));
+        if (expectedIssuerUrl != null && !expectedIssuerUrl.equals(issuerUrl)) {
+            throw new RuntimeException(String.format("Issuer url '%s' does not match expected issuer url '%s'", issuerUrl, expectedIssuerUrl));
         }
 
         String projectId = getClaim(jwt, "project_id");

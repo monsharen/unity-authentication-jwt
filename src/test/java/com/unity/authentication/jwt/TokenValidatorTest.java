@@ -10,12 +10,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TokenValidatorTest {
 
+    private static final String JWK_PROVIDER_URL = "https://api.prd.identity.corp.unity3d.com";
+    private static final String EXPECTED_ISSUER_URL = "https://player-auth.services.api.unity.com";
     private TokenValidator instance;
 
     @BeforeEach
     public void beforeEach() {
         Date date = new Date(1681207053000L);
-        instance = new TokenValidator(date);
+        instance = TokenValidator.builder()
+                .expectedIssuerUrl(EXPECTED_ISSUER_URL)
+                .jwkProviderUrl(JWK_PROVIDER_URL)
+                .now(date)
+                .build();
     }
 
     @Test
